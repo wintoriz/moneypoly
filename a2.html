@@ -1,440 +1,733 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edukinglish - Nivel A2 (Detectives)</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Nunito', sans-serif; }
-    h1, h2, h3, .font-heading { font-family: 'Fredoka', cursive; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moneypoly Pro · Edukinglish</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#152a54;
+    --navy-deep:#0d1c3a;
+    --royal:#3457c9;
+    --gold:#e0ac2b;
+    --gold-light:#f4d47c;
+    --cream:#fbf7ec;
+    --red:#e0503a;
+    --green:#4e9a5f;
+    --ink:#1c2340;
+    --ink-soft:#5c6483;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:16px;
+    background:radial-gradient(circle at 50% 0%, #23386e 0%, var(--navy-deep) 65%);
+    font-family:'Nunito Sans', sans-serif;
+    color:var(--ink); min-height:100vh;
+  }
+  .wrap{max-width:1200px; margin:0 auto;}
+  .masthead{text-align:center; margin-bottom:12px;}
+  .masthead h1{font-family:'Baloo 2', sans-serif; font-size:2.2rem; color:var(--gold-light); margin:0;}
+
+  /* SETUP SCREEN */
+  #setupScreen{
+    background:var(--cream); padding:24px; border-radius:18px; max-width:500px; margin:20px auto;
+    border:4px solid var(--gold); text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.5);
+  }
+  .player-input-group{display:flex; gap:8px; margin-bottom:10px; align-items:center;}
+  .player-input-group input{flex:1; padding:10px; border-radius:8px; border:1px solid #ccc; font-weight:700;}
+  .btn-main{
+    background:linear-gradient(160deg, var(--gold-light), var(--gold)); color:#3a2400;
+    border:none; border-radius:999px; padding:12px 24px; font-family:'Baloo 2', sans-serif;
+    font-size:1.1rem; font-weight:800; cursor:pointer; margin-top:8px; width:100%;
+  }
+
+  /* GAME DASHBOARD */
+  #gameUI{display:none;}
+  .top-controls{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:10px; flex-wrap:wrap;}
+  .players-bar{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; flex:1;}
+  .p-card{
+    background:rgba(255,255,255,0.1); border:2px solid rgba(255,255,255,0.2);
+    border-radius:12px; padding:8px 12px; color:#fff; text-align:center; min-width:115px; position:relative;
+  }
+  .p-card.active{border-color:var(--gold); background:rgba(224,172,43,0.25); transform:scale(1.05);}
+  .p-card .p-name{font-weight:800; font-size:0.9rem;}
+  .p-card .p-money{font-family:'Baloo 2', sans-serif; color:var(--gold-light); font-size:1.1rem;}
+  .p-card .badges-row{display:flex; gap:3px; justify-content:center; flex-wrap:wrap; margin-top:4px;}
+  .p-card .badge-item{
+    background:var(--green); color:#fff; font-size:8px; border-radius:999px;
+    padding:2px 5px; font-weight:800;
+  }
+  .p-card .badge-item.debt{background:var(--red);}
+  .p-card .badge-item.skip{background:var(--navy-deep); border:1px solid var(--gold);}
+
+  .action-btn-sm{
+    background:rgba(255,255,255,0.15); color:#fff; border:1px solid var(--gold);
+    border-radius:8px; padding:6px 12px; font-weight:700; cursor:pointer; font-size:0.8rem;
+  }
+
+  /* BOARD */
+  .board-outer{background:var(--royal); border-radius:18px; padding:8px; box-shadow:0 15px 40px rgba(0,0,0,0.5);}
+  .board{
+    display:grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr);
+    gap:4px; aspect-ratio:1/1; position:relative;
+  }
+  .cell{
+    background:var(--cream); border-radius:6px; display:flex; flex-direction:column;
+    align-items:center; justify-content:space-between; text-align:center; padding:0;
+    font-size:clamp(7px, 0.85vw, 10px); position:relative; cursor:pointer; font-weight:700;
+    line-height:1.1; overflow:hidden; border:1px solid rgba(0,0,0,0.1);
+  }
+  .cell.edu{ background:linear-gradient(160deg,#f3d2cb,#eab3a8); }
+  
+  /* IMAGEN COMPLETA DE FONDO DE LA CASILLA */
+  .cell img.sponsor-img{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:1;
+  }
+  
+  .cell .cell-title{
+    position:relative; z-index:2; width:100%; background:rgba(21, 42, 84, 0.82);
+    color:#fff; padding:2px 1px; font-size:clamp(6.5px, 0.8vw, 9.5px); text-shadow:0 1px 2px rgba(0,0,0,0.8);
+  }
+  .cell .cell-price{
+    position:relative; z-index:2; background:rgba(255,255,255,0.88); color:var(--red-dark);
+    padding:1px 3px; border-radius:3px; margin-bottom:12px; font-weight:800;
+  }
+  .cell .owner-tag{
+    position:absolute; bottom:0; left:0; right:0; font-size:7px;
+    background:var(--navy); color:#fff; padding:1px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; z-index:2;
+  }
+  .tokens-container{
+    position:absolute; top:2px; left:2px; display:flex; gap:2px; flex-wrap:wrap; z-index:10;
+  }
+  .p-token{
+    width:9px; height:9px; border-radius:50%; border:1px solid #fff; box-shadow:0 0 3px rgba(0,0,0,0.5);
+  }
+
+  .corner{
+    background:var(--navy); color:var(--gold-light); font-family:'Baloo 2', sans-serif;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; border-radius:6px;
+    font-size:clamp(7px, 0.9vw, 10px); font-weight:700; line-height:1.1; padding:0; overflow:hidden; position:relative;
+  }
+  .corner img.corner-img{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:1;
+  }
+  .corner .corner-text{
+    position:relative; z-index:2; background:rgba(13, 28, 58, 0.8); width:100%; padding:3px 1px; color:var(--gold-light);
+  }
+  .corner.start{background:var(--red); color:#fff;}
+
+  /* CENTRO DEL TABLERO CON IMAGEN DE FONDO */
+  .center-area{
+    grid-column: 2 / 8; grid-row: 2 / 8;
+    background:#0f2044 url('https://lh3.googleusercontent.com/d/1YT1YUnqp0vmZ4Z8cjw74j3CnF_EHr8om') no-repeat center center;
+    background-size: cover;
+    border-radius:12px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; padding:12px; color:#fff; text-align:center;
+    position:relative; overflow:hidden;
+  }
+  .center-area-content{
+    background:rgba(15, 32, 68, 0.75);
+    padding:16px 20px; border-radius:14px;
+    backdrop-filter: blur(2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    display:flex; flex-direction:column; align-items:center;
+  }
+
+  /* MODAL */
+  .overlay{position:fixed; inset:0; background:rgba(0,0,0,0.7); display:none; align-items:center; justify-content:center; z-index:100; padding:16px;}
+  .overlay.open{display:flex;}
+  .panel{background:var(--cream); border-radius:16px; max-width:440px; width:100%; padding:20px; border:4px solid var(--gold); position:relative;}
+  .bilingual-sub{font-style:italic; color:var(--ink-soft); font-size:0.82rem; margin-top:-2px; margin-bottom:8px;}
+  .product-item{
+    display:flex; align-items:center; gap:10px; background:#fff; border:1px solid var(--royal);
+    border-radius:8px; padding:8px; margin:6px 0; cursor:pointer; text-align:left;
+  }
+  .product-item:hover{background:#eef2ff;}
+  .product-item img{width:36px; height:36px; object-fit:cover; border-radius:6px;}
+</style>
 </head>
-<body class="bg-slate-900 min-h-screen text-slate-100 flex flex-col justify-between bg-gradient-to-br from-purple-950 via-slate-900 to-indigo-950">
+<body>
 
-  <!-- Encabezado -->
-  <header class="w-full bg-purple-900/40 border-b border-purple-500/30 backdrop-blur-md sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <a href="https://wintoriz.github.io/edukinglishmenu/" class="bg-purple-800/80 hover:bg-purple-700 text-purple-200 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-purple-500/30">
-          ← Menú Principal
-        </a>
-        <span class="text-xl">🐰</span>
-        <h1 class="font-heading font-bold text-lg text-purple-300 hidden sm:block">
-          Edukinglish <span class="text-white">· Nivel A2</span>
-        </h1>
-      </div>
-      <div class="flex items-center gap-2">
-        <span class="bg-purple-500/20 text-purple-300 border border-purple-400/30 text-xs font-extrabold px-3 py-1 rounded-full uppercase">
-          Mooney's Detectives 🔍
-        </span>
-      </div>
-    </div>
-  </header>
+<div class="wrap">
+  <div class="masthead">
+    <h1>MONEYPOLY</h1>
+    <p style="color:#cbd6ff; margin:0;">Bilingual Edition · Edición Bilingüe · Edukinglish</p>
+  </div>
 
-  <!-- Contenido Principal -->
-  <main class="w-full max-w-4xl mx-auto px-4 py-8 flex-grow">
-    <div id="view-container">
-      <div class="text-center py-12">
-        <span class="text-4xl animate-bounce block mb-3">🔍</span>
-        <h3 class="text-xl font-bold text-purple-300">Cargando Misiones de Mooney...</h3>
-        <p class="text-slate-400 text-sm mt-2">Conectando con la base de datos de Edukinglish A2</p>
+  <!-- SETUP PLAYERS -->
+  <div id="setupScreen">
+    <h2 style="font-family:'Baloo 2'; margin-top:0;">Setup Players / Configurar Jugadores</h2>
+    <p style="font-size:0.9rem; color:var(--ink-soft);">Choose 2 to 6 players / Elige de 2 a 6 jugadores:</p>
+    <div id="playersList"></div>
+    <button class="btn-main" onclick="addPlayerField()">+ Add Player / Agregar Jugador</button>
+    <button class="btn-main" style="background:var(--green); color:#fff;" onclick="startGame()">Start Game! / ¡Iniciar Partida!</button>
+    <button class="btn-main" id="btnLoadGame" style="background:var(--navy); color:#fff; display:none;" onclick="loadGame()">📂 Load Game / Cargar Partida</button>
+  </div>
+
+  <!-- GAME INTERFACE -->
+  <div id="gameUI">
+    <div class="top-controls">
+      <div class="players-bar" id="playersBar"></div>
+      <div>
+        <button class="action-btn-sm" onclick="saveGame()">💾 Save Game / Guardar</button>
       </div>
     </div>
-  </main>
 
-  <!-- Pie de Página -->
-  <footer class="w-full text-center py-4 border-t border-purple-900/50 text-slate-400 text-xs bg-slate-950/50">
-    <p>© 2026 Edukinglish · Nivel A2 Detectives · Vive aprendiendo 🐰</p>
-  </footer>
-
-  <script>
-    const SHEET_ID = "1TpVGs9piS8ci_WnbiclniODiTR8VnjZtK7sRN7qXe_g";
-    const EXERCISES_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Nivel%20A2`;
-
-    let allExercises = [];
-    let currentModule = 1;
-    let currentDay = 1;
-    let currentIndex = 0;
-    let unscrambleBuilt = []; // Almacena el orden creado por el usuario en 'Sentence Unscramble'
-
-    let unlockedModule = parseInt(localStorage.getItem('a2_unlocked_module')) || 1;
-    let unlockedDay = parseInt(localStorage.getItem('a2_unlocked_day')) || 1;
-
-    function parseCSV(text) {
-      const lines = text.split('\n');
-      const result = [];
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-        const row = [];
-        let insideQuotes = false;
-        let entry = '';
-        for (let j = 0; j < line.length; j++) {
-          const char = line[j];
-          if (char === '"' && line[j+1] === '"') {
-            entry += '"'; j++;
-          } else if (char === '"') {
-            insideQuotes = !insideQuotes;
-          } else if (char === ',' && !insideQuotes) {
-            row.push(entry.trim()); entry = '';
-          } else {
-            entry += char;
-          }
-        }
-        row.push(entry.trim());
-        result.push(row);
-      }
-      return result;
-    }
-
-    async function loadExercises() {
-      try {
-        const response = await fetch(EXERCISES_URL);
-        if (!response.ok) throw new Error("Error en la descarga de datos");
-        const csvText = await response.text();
-        const rows = parseCSV(csvText);
-
-        allExercises = rows
-          .filter(row => row.length > 5 && row[0] === 'A2' && row[5] && row[5] !== 'Instrucción / Pregunta')
-          .map(row => {
-            const modNum = parseInt((row[1] || '').replace('Módulo', '').trim()) || 1;
-            const dayNum = parseInt(row[2]) || 1;
-            return {
-              nivel: row[0] || '',
-              moduloStr: row[1] || '',
-              moduloNum: modNum,
-              diaNum: dayNum,
-              ejercicioNum: row[3] || '',
-              tipo: row[4] || '',
-              pregunta: row[5] || '',
-              opciones: row[6] ? row[6].split('|').map(s => s.trim()) : [],
-              respuesta: row[7] ? row[7].trim() : '',
-              feedback: row[8] || ''
-            };
-          });
-
-        if (allExercises.length > 0) {
-          renderModuleSelection();
-        } else {
-          document.getElementById('view-container').innerHTML = `<div class="text-center py-8 text-amber-400"><p class="font-bold">No se encontraron preguntas válidas.</p></div>`;
-        }
-      } catch (error) {
-        console.error("Error al cargar ejercicios:", error);
-        document.getElementById('view-container').innerHTML = `<div class="text-center py-8 text-rose-400"><p class="font-bold text-lg">Error al conectar con Google Sheets.</p></div>`;
-      }
-    }
-
-    function playEnglishSentence(text) {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const match = text.match(/["'“]([^"'”]+)["'”]/);
-        let sentenceToRead = match ? match[1] : text;
-        sentenceToRead = sentenceToRead.replace(/_+/g, '... ');
-
-        const utterance = new SpeechSynthesisUtterance(sentenceToRead);
-        utterance.lang = 'en-US';
-        utterance.rate = 0.85;
-        window.speechSynthesis.speak(utterance);
-      }
-    }
-
-    function renderModuleSelection() {
-      const container = document.getElementById('view-container');
-      let modulesHTML = '';
-
-      for (let m = 1; m <= 10; m++) {
-        const isUnlocked = m <= unlockedModule;
-        modulesHTML += `
-          <div onclick="${isUnlocked ? `selectModule(${m})` : ''}" 
-               class="p-5 rounded-3xl border ${isUnlocked ? 'bg-slate-800/80 hover:bg-purple-900/40 border-purple-500/40 cursor-pointer shadow-lg transform hover:-translate-y-1 transition' : 'bg-slate-900/50 border-slate-800 opacity-50 cursor-not-allowed'} flex items-center justify-between">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-2xl ${isUnlocked ? 'bg-purple-500/20 text-purple-300 border border-purple-400/40' : 'bg-slate-800 text-slate-500'} flex items-center justify-center font-bold text-lg font-heading">
-                ${m}
-              </div>
-              <div>
-                <h4 class="font-bold text-white font-heading text-lg">Módulo ${m}</h4>
-                <p class="text-xs text-slate-400">${isUnlocked ? '3 Días · 15 Misiones' : 'Bloqueado 🔒'}</p>
-              </div>
-            </div>
-            <span class="text-xl">${isUnlocked ? '➡️' : '🔒'}</span>
+    <div class="board-outer">
+      <div class="board" id="board">
+        <div class="center-area">
+          <div class="center-area-content">
+            <h2 style="color:var(--gold-light); font-family:'Baloo 2'; margin:0 0 6px;">MONEYPOLY</h2>
+            <div id="turnNotice" style="font-weight:700; margin-bottom:10px;">Turn: -</div>
+            <button class="btn-main" id="rollBtn" style="width:auto;" onclick="takeTurn()">🎲 Roll Dice / Tirar Dado</button>
+            <div id="dieResult" style="font-size:1.8rem; font-family:'Baloo 2'; margin-top:6px;">–</div>
           </div>
-        `;
-      }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-      container.innerHTML = `
-        <div class="bg-gradient-to-r from-purple-900/60 to-indigo-900/60 border border-purple-500/40 rounded-3xl p-6 mb-8 text-center shadow-xl">
-          <div class="w-20 h-20 bg-purple-500/20 border-2 border-purple-400 rounded-2xl mx-auto mb-3 flex items-center justify-center text-4xl shadow-inner">
-            🐰
-          </div>
-          <h2 class="text-3xl font-bold text-white font-heading">Misiones de Mooney (A2)</h2>
-          <p class="text-purple-200 text-sm mt-1 max-w-lg mx-auto">Selecciona tu módulo actual para continuar tu aprendizaje.</p>
+<!-- MODAL INTERACTIVO -->
+<div class="overlay" id="overlay">
+  <div class="panel" id="modalContent"></div>
+</div>
+
+<script>
+const P_COLORS = ['#e0503a', '#3457c9', '#4e9a5f', '#e0ac2b', '#9b59b6', '#e67e22'];
+let players = [];
+let currentPlayerIdx = 0;
+
+const SPONSORS = [
+  // LADO SUPERIOR
+  {id:'snack-attack', name:'Snack Attack', cat:'Snacks / Alimentos', price:50, side:'top', col:2, row:1, owner:null, image:'https://lh3.googleusercontent.com/d/1qUwds6Zf9fi1VwcgF2ncizmeZag7dZxc', products:[{n:'Prepared Yogurt / Yogurt Preparado', p:15}, {n:'Imported Snack / Snack Importado', p:25}], link:'https://www.instagram.com/snackattack.cholula'},
+  {id:'isabel-town', name:'Isabel Town Café', cat:'Coffee Shop / Cafetería', price:70, side:'top', col:3, row:1, owner:null, image:'https://lh3.googleusercontent.com/d/14rdD7HWax2qNqLBJS_OZfDC9IlwUaWOC', products:[{n:'Latte Coffee / Café Latte', p:20}, {n:'Special Cappuccino / Capuchino Especial', p:25}], link:'https://www.instagram.com/isabeltown'},
+  {id:'la-piazzetta', name:'La Piazzetta', cat:'Restaurant / Restaurante', price:90, side:'top', col:4, row:1, owner:null, image:'', products:[{n:'Personal Pizza / Pizza Individual', p:35}], link:''},
+  {id:'edukinglish-courses', name:'Edukinglish Courses', cat:'Edukinglish Space', price:150, side:'top', col:5, row:1, edu:true, image:'', products:[], link:''},
+  {id:'miss-chunchitas', name:'Miss Chunchitas', cat:'Gifts & Stationery / Regalos', price:100, side:'top', col:6, row:1, owner:null, image:'https://lh3.googleusercontent.com/d/1vbjKvvWisWpOx_fvuKa0sGeDDnbLaMf1', products:[{n:'Design Notebook / Cuaderno Diseño', p:20}, {n:'Kawaii Pen / Pluma Kawaii', p:10}], link:'https://www.instagram.com/miss_chunchitas2022'},
+  {id:'be-cool', name:'Be Cool', cat:'Fashion / Moda', price:120, side:'top', col:7, row:1, owner:null, image:'', products:[{n:'Fashion Accessory / Accesorio de Moda', p:30}], link:''},
+
+  // LADO DERECHO
+  {id:'dental-care', name:'Dental Care', cat:'Health / Salud', price:140, side:'right', col:8, row:2, owner:null, image:'', products:[{n:'Dental Cleaning / Limpieza Dental', p:45}], link:''},
+  {id:'pasteleria-yoyiz', name:'Pastelería Yoyiz', cat:'Desserts / Postres', price:160, side:'right', col:8, row:3, owner:null, image:'', products:[{n:'Slice of Cake / Rebanada de Pastel', p:25}], link:''},
+  {id:'w-edition', name:'W Edition', cat:'Design / Diseño', price:180, side:'right', col:8, row:4, owner:null, image:'', products:[{n:'Custom Design / Diseño Personalizado', p:50}], link:''},
+  {id:'edukinglish-gaming', name:'Edukinglish Gaming', cat:'Edukinglish Space', price:150, side:'right', col:8, row:5, edu:true, image:'', products:[], link:''},
+  {id:'jellissimo', name:'Jellissimo', cat:'Gourmet Desserts / Postres', price:200, side:'right', col:8, row:6, owner:null, image:'', products:[{n:'Gourmet Jelly / Gelatina Gourmet', p:30}], link:''},
+  {id:'card-mystery-1', name:'Mystery Card 🎁', cat:'Special Space / Especial', price:0, side:'right', col:8, row:7, isMystery:true},
+
+  // LADO INFERIOR
+  {id:'urban-kicks', name:'Urban Kicks', cat:'Footwear / Calzado', price:240, side:'bottom', col:7, row:8, owner:null, image:'', products:[{n:'Shoe Cleaning / Limpia Calzado', p:35}], link:''},
+  {id:'servilimpia', name:'ServiLimpia', cat:'Services / Servicios', price:260, side:'bottom', col:6, row:8, owner:null, image:'', products:[{n:'Cleaning Service / Servicio de Limpieza', p:40}], link:''},
+  {id:'edukinglish-media', name:'Edukinglish Media', cat:'Edukinglish Space', price:150, side:'bottom', col:5, row:8, edu:true, image:'', products:[], link:''},
+  {id:'creativa-publicidad', name:'Creativa Publicidad', cat:'Marketing / Publicidad', price:280, side:'bottom', col:4, row:8, owner:null, image:'', products:[{n:'Ad Banner / Anuncio Publicitario', p:50}], link:''},
+  {id:'integra-motors', name:'Integra Motors', cat:'Automotive / Automotriz', price:300, side:'bottom', col:3, row:8, owner:null, image:'', products:[{n:'Fluid Check / Revisión de Niveles', p:60}], link:''},
+  {id:'chips-donuts', name:'Chips & Donuts', cat:'Snacks / Postres', price:320, side:'bottom', col:2, row:8, owner:null, image:'', products:[{n:'Donuts Pack / Paquete Donas', p:30}], link:''},
+
+  // LADO IZQUIERDO
+  {id:'integra-capital', name:'Integra Capital', cat:'Finance / Finanzas', price:340, side:'left', col:1, row:7, owner:null, image:'', products:[{n:'Financial Advisory / Asesoría Financiera', p:70}], link:''},
+  {id:'w7-channel', name:'W7 Channel', cat:'Media / Medios', price:360, side:'left', col:1, row:6, owner:null, image:'', products:[{n:'Video Mention / Mención en Video', p:80}], link:''},
+  {id:'vitas', name:'Vitas', cat:'Health / Salud', price:380, side:'left', col:1, row:5, owner:null, image:'', products:[{n:'Protein Shake / Batido Proteico', p:35}], link:''},
+  {id:'edukinglish-stories', name:'Edukinglish Stories', cat:'Edukinglish Space', price:150, side:'left', col:1, row:4, edu:true, image:'', products:[], link:''},
+  {id:'diegos-factory', name:'Diego\'s Factory', cat:'Toys / Juguetes', price:400, side:'left', col:1, row:3, owner:null, image:'', products:[{n:'Retro Toy / Juguete Retro', p:45}], link:''},
+  {id:'card-mystery-2', name:'Mystery Card 🎁', cat:'Special Space / Especial', price:0, side:'left', col:1, row:2, isMystery:true}
+];
+
+const CORNERS = {
+  start: {name:'START 🏁', row:1, col:1, class:'start', image:''},
+  ohoh: {name:'OH OH! 🧪', row:1, col:8, image:'https://lh3.googleusercontent.com/d/1HSPs88t-a6EpeqcYzRsOprGCxIFZ24Qy'},
+  freetime: {name:'FREE TIME ⚽', row:8, col:8, image:'https://lh3.googleusercontent.com/d/1bkC0vGJiUYiHD3hUDZLEQi8yCfCJNn4-'},
+  doctor: {name:"DOCTOR 🩺", row:8, col:1, image:'https://lh3.googleusercontent.com/d/1VbOjj-bJa2Ht10osL8F-rICXWhadjwQ0'}
+};
+
+const MYSTERY_PENALTIES = [
+  {title: "💸 Maintenance Expenses / Gastos de Mantenimiento", desc: "You repaired your equipment. Pay $50 to the Bank. / Reparaste tu equipo. Pagas $50 al banco.", amount: 50},
+  {title: "💸 Finance Tax / Impuesto de Finanzas", desc: "Surprise audit! Pay $80 to the Bank. / ¡Auditoría sorpresa! Pagas $80 al banco.", amount: 80},
+  {title: "💸 Supplies Purchase / Compra de Insumos", desc: "You bought office supplies. Pay $40. / Compraste papelería e insumos. Pagas $40.", amount: 40},
+  {title: "💸 Traffic Fine / Multa de Tráfico", desc: "Late to a business meeting. Pay $30. / Llegaste tarde a una reunión. Pagas $30.", amount: 30},
+  {title: "💸 Membership Fee / Cuota de Asociación", desc: "Merchant association renewal. Pay $60. / Renovación de membresía. Pagas $60.", amount: 60},
+  {title: "💸 Utility Bills / Pago de Servicios", desc: "Power & internet bills. Pay $70. / Factura de luz e internet. Pagas $70.", amount: 70},
+  {title: "💸 Car Repair / Reparación de Auto", desc: "Emergency mechanical service. Pay $100. / Servicio mecánico de emergencia. Pagas $100.", amount: 100},
+  {title: "💸 Software License / Licencia de Software", desc: "Digital tool renewal. Pay $45. / Licencias de herramientas digitales. Pagas $45.", amount: 45},
+  {title: "💸 Bank Fee / Comisión Bancaria", desc: "Account transaction fees. Pay $25. / Cargos por transferencia. Pagas $25.", amount: 25},
+  {title: "💸 Pharmacy Expenses / Gastos de Farmacia", desc: "Emergency medicine. Pay $55. / Compraste insumos médicos. Pagas $55.", amount: 55}
+];
+
+const REWARD_AMOUNTS = [50, 60, 75, 80, 90, 100, 120, 150];
+
+if (localStorage.getItem('moneypoly_saved_game')) {
+  document.getElementById('btnLoadGame').style.display = 'block';
+}
+
+function addPlayerField() {
+  const container = document.getElementById('playersList');
+  const count = container.children.length;
+  if (count >= 6) return;
+  const div = document.createElement('div');
+  div.className = 'player-input-group';
+  div.innerHTML = `
+    <span style="background:${P_COLORS[count]}; width:18px; height:18px; border-radius:50%; display:inline-block;"></span>
+    <input type="text" value="Player ${count + 1}" placeholder="Player name">
+  `;
+  container.appendChild(div);
+}
+addPlayerField(); addPlayerField();
+
+function startGame() {
+  const inputs = document.querySelectorAll('#playersList input');
+  players = [];
+  inputs.forEach((inp, idx) => {
+    players.push({
+      id: idx,
+      name: inp.value || `Player ${idx+1}`,
+      color: P_COLORS[idx],
+      money: 1500,
+      pos: 0,
+      debt: 0,
+      hasDiscount: false,
+      hasMedicine: false,
+      skipTurn: false
+    });
+  });
+
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('gameUI').style.display = 'block';
+  initBoard();
+  updateUI();
+}
+
+function initBoard() {
+  const boardEl = document.getElementById('board');
+  
+  Object.keys(CORNERS).forEach(key => {
+    const c = CORNERS[key];
+    const div = document.createElement('div');
+    div.className = 'corner' + (c.class ? ' ' + c.class : '');
+    div.style.gridColumn = c.col;
+    div.style.gridRow = c.row;
+    
+    let imgHtml = c.image ? `<img src="${c.image}" class="corner-img">` : '';
+    div.innerHTML = `
+      ${imgHtml}
+      <div class="corner-text">${c.name}</div>
+    `;
+    
+    if(key === 'doctor') div.addEventListener('click', handleDoctorSpace);
+    boardEl.appendChild(div);
+  });
+
+  SPONSORS.forEach((s) => {
+    const div = document.createElement('div');
+    div.className = 'cell' + (s.edu ? ' edu' : '');
+    div.id = `cell-${s.id}`;
+    div.style.gridColumn = s.col;
+    div.style.gridRow = s.row;
+    
+    let imgHtml = s.image ? `<img src="${s.image}" class="sponsor-img">` : '';
+    let ownerText = s.edu ? 'Territory' : (s.isMystery ? 'Special' : 'Unowned / Sin dueño');
+    
+    div.innerHTML = `
+      <div class="tokens-container" id="tokens-${s.id}"></div>
+      ${imgHtml}
+      <div class="cell-title">${s.name}</div>
+      ${s.price ? `<div class="cell-price">$${s.price}</div>` : ''}
+      <div class="owner-tag" id="owner-${s.id}">${ownerText}</div>
+    `;
+    div.addEventListener('click', () => openCellInfo(s));
+    boardEl.appendChild(div);
+  });
+  renderTokens();
+}
+
+function renderTokens() {
+  document.querySelectorAll('.tokens-container').forEach(el => el.innerHTML = '');
+  players.forEach(p => {
+    const s = SPONSORS[p.pos];
+    if(s) {
+      const container = document.getElementById(`tokens-${s.id}`);
+      if(container) {
+        const t = document.createElement('div');
+        t.className = 'p-token';
+        t.style.background = p.color;
+        container.appendChild(t);
+      }
+    }
+  });
+}
+
+function updateUI() {
+  const bar = document.getElementById('playersBar');
+  bar.innerHTML = '';
+  players.forEach((p, idx) => {
+    bar.innerHTML += `
+      <div class="p-card ${idx === currentPlayerIdx ? 'active' : ''}">
+        <div class="p-name" style="color:${p.color}">${p.name}</div>
+        <div class="p-money">$${p.money}</div>
+        <div class="badges-row">
+          ${p.debt > 0 ? `<div class="badge-item debt">Debt: $${p.debt}</div>` : ''}
+          ${p.hasDiscount ? `<div class="badge-item">🎟️ $100 OFF</div>` : ''}
+          ${p.hasMedicine ? `<div class="badge-item">💊 Medicine</div>` : ''}
+          ${p.skipTurn ? `<div class="badge-item skip">⏳ Miss Turn</div>` : ''}
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          ${modulesHTML}
+      </div>
+    `;
+  });
+  document.getElementById('turnNotice').textContent = `Turn: ${players[currentPlayerIdx].name}`;
+  renderTokens();
+}
+
+function takeTurn() {
+  const player = players[currentPlayerIdx];
+  
+  if (player.skipTurn) {
+    player.skipTurn = false;
+    alert(`${player.name} misses this turn at the Doctor's / ${player.name} pierde este turno en el Doctor.`);
+    closeModal(0);
+    return;
+  }
+
+  const btn = document.getElementById('rollBtn');
+  btn.disabled = true;
+  const roll = Math.floor(Math.random() * 6) + 1;
+  document.getElementById('dieResult').textContent = roll;
+
+  const oldPos = player.pos;
+  player.pos = (player.pos + roll) % SPONSORS.length;
+  
+  if (player.pos < oldPos) {
+    handlePassStart(player);
+  }
+
+  updateUI();
+
+  setTimeout(() => {
+    handleLanding(player, SPONSORS[player.pos]);
+    btn.disabled = false;
+  }, 400);
+}
+
+function handlePassStart(player) {
+  let bonus = Math.floor(player.money * 0.50);
+  let noticeMsg = `🎉 Passed START! Earned 50% Bonus: +$${bonus}\n¡Pasaste por START! Ganaste 50% de Bono: +$${bonus}`;
+  
+  player.money += bonus;
+
+  if (player.debt > 0) {
+    if (player.money >= player.debt) {
+      player.money -= player.debt;
+      noticeMsg += `\n\n💸 Paid Pending Debt / Deuda pendiente pagada: -$${player.debt}`;
+      player.debt = 0;
+    } else {
+      player.debt -= player.money;
+      noticeMsg += `\n\n💸 Partial Debt Paid / Pago parcial de deuda: -$${player.money}. Remaining Debt / Deuda restante: $${player.debt}`;
+      player.money = 0;
+    }
+  }
+  alert(noticeMsg);
+}
+
+function handleLanding(player, sponsor) {
+  const modal = document.getElementById('modalContent');
+  const overlay = document.getElementById('overlay');
+  
+  if (sponsor.isMystery) {
+    const isPenalty = Math.random() < (10 / 34);
+    
+    if (isPenalty) {
+      const card = MYSTERY_PENALTIES[Math.floor(Math.random() * MYSTERY_PENALTIES.length)];
+      modal.innerHTML = `
+        <h2 style="font-family:'Baloo 2'; color:var(--red);">${card.title}</h2>
+        <p>${card.desc}</p>
+        <button class="btn-main" style="background:var(--red); color:#fff;" onclick="applyPenalty(${card.amount})">Pay / Pagar $${card.amount}</button>
+      `;
+    } else {
+      const realSponsors = SPONSORS.filter(s => !s.edu && !s.isMystery);
+      const randomSponsor = realSponsors[Math.floor(Math.random() * realSponsors.length)];
+      const rewardAmt = REWARD_AMOUNTS[Math.floor(Math.random() * REWARD_AMOUNTS.length)];
+      const msg = `I arrived at ${randomSponsor.name} playing Edukinglish Moneypoly! 🦊🐱🐶`;
+
+      modal.innerHTML = `
+        <h2 style="font-family:'Baloo 2'; color:var(--royal);">🎁 Mystery Card / Tarjeta Misteriosa</h2>
+        <p>Visit <strong>${randomSponsor.name}</strong> and share the message to get <strong>$${rewardAmt}</strong> bonus.</p>
+        <p class="bilingual-sub">Visita a nuestro patrocinador y comparte el mensaje para ganar tu bono.</p>
+        <div style="background:#fff; border:1px dashed var(--royal); padding:10px; border-radius:8px; margin:10px 0; font-size:0.88rem;">
+          "${msg}"
         </div>
+        <button class="btn-main" onclick="copyText('${msg}')">📋 Copy Message / Copiar Mensaje</button>
+        ${randomSponsor.link ? `<a href="${randomSponsor.link}" target="_blank" style="display:block; text-decoration:none;"><button class="btn-main" style="background:var(--gold); color:#3a2400;">🌐 Visit Website / Visitar Sitio</button></a>` : ''}
+        <button class="btn-main" style="background:var(--green); color:#fff;" onclick="closeModal(${rewardAmt})">Claim / Cobrar $${rewardAmt}</button>
       `;
     }
+    overlay.classList.add('open');
+    return;
+  }
 
-    function selectModule(m) {
-      currentModule = m;
-      renderDaySelection();
+  if (sponsor.edu) {
+    modal.innerHTML = `
+      <h2 style="font-family:'Baloo 2'; color:var(--royal);">${sponsor.name}</h2>
+      <p>Pay <strong>$150</strong> to the Bank for training and receive a Surprise Reward!</p>
+      <p class="bilingual-sub">Pagas $150 al Banco por tu entrenamiento y recibes una Recompensa Sorpresa.</p>
+      <button class="btn-main" style="background:var(--navy); color:#fff;" onclick="claimEduSurprise()">Pay $150 & Get Reward / Pagar $150 y Recibir Premio</button>
+    `;
+    overlay.classList.add('open');
+    return;
+  }
+
+  let sponsorImgHtml = sponsor.image ? `<img src="${sponsor.image}" style="max-height:60px; margin-bottom:8px;"><br>` : '';
+  let html = `${sponsorImgHtml}<h2 style="font-family:'Baloo 2'; margin:0;">${sponsor.name}</h2>`;
+  html += `<p style="color:var(--ink-soft); font-weight:700;">${sponsor.cat}</p>`;
+
+  if (sponsor.owner === null) {
+    let finalPrice = sponsor.price;
+    let discountNotice = '';
+    if (player.hasDiscount) {
+      finalPrice = Math.max(0, sponsor.price - 100);
+      discountNotice = `<p style="color:var(--green); font-weight:800;">🎟️ Applying $100 OFF Coupon! Final Price: $${finalPrice}</p>`;
     }
 
-    function renderDaySelection() {
-      const container = document.getElementById('view-container');
-      let daysHTML = '';
-
-      for (let d = 1; d <= 3; d++) {
-        const isUnlocked = (currentModule < unlockedModule) || (currentModule === unlockedModule && d <= unlockedDay);
-        daysHTML += `
-          <div onclick="${isUnlocked ? `selectDay(${d})` : ''}" 
-               class="p-6 rounded-3xl border ${isUnlocked ? 'bg-slate-800/80 hover:bg-purple-900/40 border-purple-500/40 cursor-pointer shadow-lg transform hover:-translate-y-1 transition' : 'bg-slate-900/50 border-slate-800 opacity-50 cursor-not-allowed'} flex flex-col items-center text-center">
-            <span class="text-3xl mb-2">${isUnlocked ? '⭐' : '🔒'}</span>
-            <h4 class="font-bold text-white font-heading text-xl mb-1">Día ${d}</h4>
-            <p class="text-xs text-slate-400 mb-4">5 Ejercicios prácticos</p>
-            <button ${isUnlocked ? '' : 'disabled'} class="w-full ${isUnlocked ? 'bg-purple-600 hover:bg-purple-500 text-white' : 'bg-slate-800 text-slate-500'} font-extrabold py-2.5 rounded-xl text-xs transition">
-              ${isUnlocked ? 'Iniciar Misión' : 'Bloqueado'}
-            </button>
-          </div>
-        `;
-      }
-
-      container.innerHTML = `
-        <div class="flex items-center justify-between mb-6">
-          <button onclick="renderModuleSelection()" class="text-xs text-purple-300 font-bold hover:text-white flex items-center gap-1">
-            ← Cambiar de Módulo
-          </button>
-          <span class="text-xs bg-purple-500/20 text-purple-300 font-bold px-3 py-1 rounded-full uppercase">Módulo ${currentModule}</span>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          ${daysHTML}
-        </div>
-      `;
-    }
-
-    function selectDay(d) {
-      currentDay = d;
-      currentIndex = 0;
-      renderExerciseScreen();
-    }
-
-    function renderExerciseScreen() {
-      const exercises = allExercises.filter(ex => ex.moduloNum === currentModule && ex.diaNum === currentDay);
-      const container = document.getElementById('view-container');
-
-      if (!exercises || exercises.length === 0) {
-        container.innerHTML = `
-          <div class="bg-slate-800 border border-purple-500/30 rounded-3xl p-8 text-center">
-            <p class="text-amber-400 font-bold mb-4">No hay ejercicios cargados para este día aún.</p>
-            <button onclick="renderDaySelection()" class="bg-purple-600 text-white font-bold px-4 py-2 rounded-xl text-xs">Volver a los Días</button>
-          </div>
-        `;
-        return;
-      }
-
-      const ex = exercises[currentIndex];
-      const progressPercent = Math.round(((currentIndex + 1) / exercises.length) * 100);
-      const isUnscramble = ex.tipo.toLowerCase().includes('unscramble');
-      const isListening = ex.tipo.toLowerCase().includes('listening');
-
-      // Botón de Audio SOLO en ejercicios de tipo Listening
-      const cleanPregunta = ex.pregunta.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-      const audioButtonHTML = isListening ? `
-        <div class="mb-6">
-          <button onclick="playEnglishSentence('${cleanPregunta}')" 
-                  class="bg-purple-600 hover:bg-purple-500 text-white font-extrabold py-3 px-6 rounded-2xl transition flex items-center gap-3 shadow-lg transform active:scale-95 border border-purple-400/40">
-            <span class="text-2xl animate-pulse">🔊</span> Escuchar Oración en Inglés
-          </button>
-        </div>
-      ` : '';
-
-      let contentHTML = '';
-
-      if (isUnscramble) {
-        unscrambleBuilt = [];
-        contentHTML = `
-          <div class="bg-slate-900/60 border border-purple-500/30 rounded-2xl p-4 min-h-[64px] mb-4 flex flex-wrap gap-2 items-center" id="unscramble-target">
-            <span class="text-slate-500 text-sm italic">Toca las palabras abajo para construir la oración...</span>
-          </div>
-
-          <div class="flex flex-wrap gap-2 mb-6" id="unscramble-source">
-            ${ex.opciones.map((opt, i) => `
-              <button id="word-btn-${i}" onclick="pickWord('${opt.replace(/'/g, "\\'").replace(/"/g, '&quot;')}', ${i})" 
-                      class="bg-slate-700 hover:bg-purple-600/80 border border-purple-400/30 text-white font-bold py-2.5 px-4 rounded-xl shadow transition transform active:scale-95">
-                ${opt}
-              </button>
-            `).join('')}
-          </div>
-
-          <div class="flex gap-3 mb-6">
-            <button onclick="checkUnscramble('${ex.respuesta.replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${ex.feedback.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')" 
-                    class="bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold px-6 py-2.5 rounded-xl shadow-lg transition transform active:scale-95">
-              Comprobar Orden
-            </button>
-            <button onclick="resetUnscramble()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold px-4 py-2.5 rounded-xl transition">
-              Reiniciar
-            </button>
-          </div>
-        `;
-      } else {
-        // Ejercicios normales de opción múltiple / selección
-        contentHTML = `
-          <div class="space-y-3 mb-6">
-            ${ex.opciones.map(opt => {
-              const cleanOpt = opt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-              const cleanAns = ex.respuesta.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-              const cleanFb = ex.feedback.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-              return `
-                <button onclick="checkAnswer('${cleanOpt}', '${cleanAns}', '${cleanFb}')" 
-                        class="w-full bg-slate-700/80 hover:bg-purple-600/60 border border-purple-500/30 text-white font-semibold py-3.5 px-4 rounded-2xl text-left transition transform active:scale-95 shadow">
-                  ${opt}
-                </button>
-              `;
-            }).join('')}
-          </div>
-        `;
-      }
-
-      container.innerHTML = `
-        <div class="bg-slate-800/80 border border-purple-500/30 rounded-3xl p-6 md:p-8 shadow-2xl backdrop-blur-md">
-          
-          <div class="flex items-center justify-between mb-3 border-b border-purple-500/20 pb-3">
-            <button onclick="renderDaySelection()" class="text-xs text-purple-300 font-bold hover:text-white">
-              ← Salir al menú
-            </button>
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-bold text-purple-400 uppercase tracking-widest">Módulo ${currentModule} · Día ${currentDay}</span>
-              <span class="text-xs bg-purple-500/20 text-purple-300 font-bold px-2.5 py-1 rounded-lg">Ejercicio ${currentIndex + 1} de ${exercises.length}</span>
-            </div>
-          </div>
-
-          <div class="w-full bg-slate-900/60 h-2.5 rounded-full overflow-hidden mb-6 border border-purple-500/20">
-            <div class="bg-gradient-to-r from-purple-500 to-indigo-400 h-full transition-all duration-300" style="width: ${progressPercent}%"></div>
-          </div>
-          
-          <h3 class="text-lg md:text-xl font-bold text-white mb-4 leading-relaxed">${ex.pregunta}</h3>
-
-          ${audioButtonHTML}
-
-          ${contentHTML}
-
-          <div id="feedback-box" class="hidden p-4 rounded-2xl mb-4 text-sm font-semibold"></div>
-
-          <div class="flex justify-between items-center pt-4 border-t border-purple-500/20">
-            <button onclick="prevExercise()" ${currentIndex === 0 ? 'disabled class="opacity-40 cursor-not-allowed text-slate-500 text-sm font-bold"' : 'class="text-purple-300 hover:text-white text-sm font-bold"'}>
-              ← Anterior
-            </button>
-            <button onclick="nextExercise(${exercises.length})" class="bg-purple-600 hover:bg-purple-500 text-white px-6 py-2.5 rounded-xl text-sm font-extrabold shadow-lg transition">
-              ${currentIndex === exercises.length - 1 ? 'Completar Día 🎉' : 'Siguiente →'}
-            </button>
+    html += `
+      ${discountNotice}
+      <p>Unowned space. Do you want to buy shares for <strong>$${finalPrice}</strong>?</p>
+      <p class="bilingual-sub">Casilla sin dueño. ¿Deseas comprar las acciones por este precio?</p>
+      <button class="btn-main" style="background:var(--green); color:#fff;" onclick="buyProperty('${sponsor.id}', ${finalPrice})">Buy Shares / Comprar Acciones</button>
+      <button class="btn-main" style="background:#ccc; color:#333;" onclick="closeModal(0)">Pass / Pasar Turno</button>
+    `;
+  } else if (sponsor.owner === player.id) {
+    html += `<p>This is your business! Enjoy your profits. / ¡Esta es tu propiedad!</p>`;
+    html += `<button class="btn-main" onclick="closeModal(0)">Continue / Continuar</button>`;
+  } else {
+    const ownerPlayer = players[sponsor.owner];
+    html += `<p style="color:var(--red);">Owned by <strong>${ownerPlayer.name}</strong>. Choose a product/service:</p>`;
+    html += `<p class="bilingual-sub">Propiedad de otro jugador. Elige un producto o servicio para consumir:</p>`;
+    
+    sponsor.products.forEach(prod => {
+      let prodImg = prod.image ? `<img src="${prod.image}">` : '🛍️';
+      html += `
+        <div class="product-item" onclick="payService(${sponsor.owner}, ${prod.p})">
+          <div>${prodImg}</div>
+          <div style="flex:1;">
+            <div><strong>${prod.n}</strong></div>
+            <div style="color:var(--royal);">$${prod.p}</div>
           </div>
         </div>
       `;
+    });
+  }
+
+  modal.innerHTML = html;
+  overlay.classList.add('open');
+}
+
+function openCellInfo(sponsor) {
+  handleLanding(players[currentPlayerIdx], sponsor);
+}
+
+function applyPenalty(amount) {
+  const player = players[currentPlayerIdx];
+  if (player.money >= amount) {
+    player.money -= amount;
+  } else {
+    player.debt += (amount - player.money);
+    player.money = 0;
+  }
+  closeModal(0);
+}
+
+function claimEduSurprise() {
+  const player = players[currentPlayerIdx];
+  if (player.money < 150) {
+    alert("Not enough money for Edukinglish training / No tienes $150 para el entrenamiento.");
+    closeModal(0);
+    return;
+  }
+  player.money -= 150;
+
+  const surprises = [
+    {
+      title: "🎟️ Discount Coupon / Cupón $100 OFF", 
+      desc: "You received $100 OFF for your next space purchase! / ¡Recibiste $100 de descuento para tu siguiente compra!", 
+      type: "discount"
+    },
+    {
+      title: "🎲 Extra Roll / Tiro Extra", 
+      desc: "Roll the dice again immediately! / ¡Tiras el dado de nuevo de inmediato!", 
+      type: "extraRoll"
+    },
+    {
+      title: "🚀 Pass to START / Pase a START", 
+      desc: "Fly directly to START space and collect your 50% bonus! / ¡Vuelas directo a la casilla START y cobras tu bono!", 
+      type: "startPass"
+    },
+    {
+      title: "💊 Stomach Medicine / Medicamento", 
+      desc: "Stomach medicine acquired! Use it to protect yourself from Doctor visits. / ¡Medicamento obtenido! Te protegerá en la casilla del Doctor.", 
+      type: "medicine"
+    }
+  ];
+
+  const prize = surprises[Math.floor(Math.random() * surprises.length)];
+  const modal = document.getElementById('modalContent');
+
+  if (prize.type === "discount") player.hasDiscount = true;
+  if (prize.type === "medicine") player.hasMedicine = true;
+
+  modal.innerHTML = `
+    <h2 style="font-family:'Baloo 2'; color:var(--royal);">${prize.title}</h2>
+    <p>${prize.desc}</p>
+    <button class="btn-main" style="background:var(--green); color:#fff;" onclick="execEduReward('${prize.type}')">Awesome! / ¡Excelente!</button>
+  `;
+}
+
+function execEduReward(type) {
+  const player = players[currentPlayerIdx];
+  document.getElementById('overlay').classList.remove('open');
+
+  if (type === "extraRoll") {
+    alert("🎲 Extra turn! Roll again. / ¡Turno extra! Tira de nuevo.");
+    updateUI();
+  } else if (type === "startPass") {
+    player.pos = 0;
+    handlePassStart(player);
+    updateUI();
+    currentPlayerIdx = (currentPlayerIdx + 1) % players.length;
+    updateUI();
+  } else {
+    currentPlayerIdx = (currentPlayerIdx + 1) % players.length;
+    updateUI();
+  }
+}
+
+function handleDoctorSpace() {
+  const player = players[currentPlayerIdx];
+  const modal = document.getElementById('modalContent');
+  const overlay = document.getElementById('overlay');
+
+  if (player.hasMedicine) {
+    player.hasMedicine = false;
+    modal.innerHTML = `
+      <h2 style="font-family:'Baloo 2'; color:var(--green);">💊 Protected by Medicine!</h2>
+      <p>You used your stomach medicine! You don't need to visit the Doctor and won't miss a turn.</p>
+      <p class="bilingual-sub">¡Usaste tu medicamento para el estómago! No necesitas ir al doctor ni pierdes tu turno.</p>
+      <button class="btn-main" style="background:var(--green); color:#fff;" onclick="closeModal(0)">Continue / Continuar</button>
+    `;
+  } else {
+    player.pos = 6;
+    player.skipTurn = true;
+    
+    let consultFee = 45;
+    if (player.money >= consultFee) {
+      player.money -= consultFee;
+    } else {
+      player.debt += (consultFee - player.money);
+      player.money = 0;
     }
 
-    // Funciones para armar la oración interactiva
-    function pickWord(word, btnIndex) {
-      const btn = document.getElementById(`word-btn-${btnIndex}`);
-      if (btn) btn.disabled = true; btn.classList.add('opacity-30', 'pointer-events-none');
-      
-      unscrambleBuilt.push({ word, btnIndex });
-      renderUnscrambleTarget();
-    }
+    modal.innerHTML = `
+      <h2 style="font-family:'Baloo 2'; color:var(--red);">🩺 Doctor's Appointment</h2>
+      <p>You fell ill! Sent to medical care (Dental Care). Pay $45 consult fee and miss 1 turn.</p>
+      <p class="bilingual-sub">¡Te sentiste mal! Fuiste enviado a atención médica. Pagas $45 de consulta y pierdes 1 turno.</p>
+      <button class="btn-main" style="background:var(--red); color:#fff;" onclick="closeModal(0)">Accept / Aceptar</button>
+    `;
+  }
+  overlay.classList.add('open');
+}
 
-    function removeWord(builtIndex) {
-      const item = unscrambleBuilt[builtIndex];
-      const btn = document.getElementById(`word-btn-${item.btnIndex}`);
-      if (btn) {
-        btn.disabled = false;
-        btn.classList.remove('opacity-30', 'pointer-events-none');
-      }
-      unscrambleBuilt.splice(builtIndex, 1);
-      renderUnscrambleTarget();
-    }
+function buyProperty(sponsorId, finalPrice) {
+  const sponsor = SPONSORS.find(s => s.id === sponsorId);
+  const player = players[currentPlayerIdx];
 
-    function resetUnscramble() {
-      unscrambleBuilt.forEach(item => {
-        const btn = document.getElementById(`word-btn-${item.btnIndex}`);
-        if (btn) {
-          btn.disabled = false;
-          btn.classList.remove('opacity-30', 'pointer-events-none');
+  if (player.money >= finalPrice) {
+    player.money -= finalPrice;
+    sponsor.owner = player.id;
+    if (player.hasDiscount) player.hasDiscount = false;
+
+    const tag = document.getElementById(`owner-${sponsor.id}`);
+    if(tag) {
+      tag.textContent = player.name;
+      tag.style.background = player.color;
+    }
+  } else {
+    alert("Not enough money to buy this property / No tienes suficiente dinero.");
+  }
+  closeModal(0);
+}
+
+function payService(ownerIdx, amount) {
+  const payer = players[currentPlayerIdx];
+  const owner = players[ownerIdx];
+
+  if (payer.money >= amount) {
+    payer.money -= amount;
+    owner.money += amount;
+    alert(`Paid $${amount} to ${owner.name} / Pagaste $${amount} a ${owner.name}.`);
+  } else {
+    let paidAmt = payer.money;
+    let debtAmt = amount - paidAmt;
+    
+    owner.money += paidAmt;
+    payer.money = 0;
+    payer.debt += debtAmt;
+
+    alert(`You paid $${paidAmt} with all your cash. The remaining $${debtAmt} was registered as debt and will be paid on START.\n\nPagaste $${paidAmt} con todo tu dinero. Los $${debtAmt} restantes se registraron como deuda y se descontarán en START.`);
+  }
+  closeModal(0);
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text);
+  alert("Message copied to clipboard! / ¡Mensaje copiado al portapapeles!");
+}
+
+function closeModal(bonusMoney) {
+  if (bonusMoney) players[currentPlayerIdx].money += bonusMoney;
+  document.getElementById('overlay').classList.remove('open');
+  currentPlayerIdx = (currentPlayerIdx + 1) % players.length;
+  updateUI();
+}
+
+/* SISTEMA DE GUARDADO */
+function saveGame() {
+  const state = {
+    players: players,
+    currentPlayerIdx: currentPlayerIdx,
+    owners: SPONSORS.map(s => ({id: s.id, owner: s.owner}))
+  };
+  localStorage.setItem('moneypoly_saved_game', JSON.stringify(state));
+  alert('Game saved successfully! / ¡Partida guardada correctamente!');
+}
+
+function loadGame() {
+  const saved = localStorage.getItem('moneypoly_saved_game');
+  if (!saved) return;
+  const state = JSON.parse(saved);
+  players = state.players;
+  currentPlayerIdx = state.currentPlayerIdx;
+  
+  state.owners.forEach(o => {
+    const s = SPONSORS.find(item => item.id === o.id);
+    if (s) s.owner = o.owner;
+  });
+
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('gameUI').style.display = 'block';
+  initBoard();
+  
+  SPONSORS.forEach(s => {
+    if (s.owner !== null) {
+      const ownerP = players.find(p => p.id === s.owner);
+      if (ownerP) {
+        const tag = document.getElementById(`owner-${s.id}`);
+        if(tag) {
+          tag.textContent = ownerP.name;
+          tag.style.background = ownerP.color;
         }
-      });
-      unscrambleBuilt = [];
-      renderUnscrambleTarget();
-    }
-
-    function renderUnscrambleTarget() {
-      const target = document.getElementById('unscramble-target');
-      if (unscrambleBuilt.length === 0) {
-        target.innerHTML = `<span class="text-slate-500 text-sm italic">Toca las palabras abajo para construir la oración...</span>`;
-      } else {
-        target.innerHTML = unscrambleBuilt.map((item, idx) => `
-          <button onclick="removeWord(${idx})" class="bg-purple-600 hover:bg-purple-700 text-white font-extrabold px-3 py-1.5 rounded-xl text-sm transition">
-            ${item.word} ✕
-          </button>
-        `).join('');
       }
     }
+  });
 
-    function checkUnscramble(correct, feedback) {
-      const userString = unscrambleBuilt.map(i => i.word).join(' ').trim();
-      const cleanCorrect = correct.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "").toLowerCase();
-      const cleanUser = userString.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "").toLowerCase();
-
-      checkAnswer(cleanUser, cleanCorrect, feedback);
-    }
-
-    function checkAnswer(selected, correct, feedback) {
-      const fbBox = document.getElementById('feedback-box');
-      fbBox.classList.remove('hidden', 'bg-emerald-500/20', 'text-emerald-300', 'border-emerald-500/40', 'bg-rose-500/20', 'text-rose-300', 'border-rose-500/40');
-      
-      const isCorrect = selected.toLowerCase() === correct.toLowerCase();
-
-      if (isCorrect) {
-        fbBox.classList.add('bg-emerald-500/20', 'text-emerald-300', 'border', 'border-emerald-500/40');
-        fbBox.innerHTML = `🥳 <strong>¡Excelente!</strong> ${feedback || 'Respuesta correcta.'}`;
-      } else {
-        fbBox.classList.add('bg-rose-500/20', 'text-rose-300', 'border', 'border-rose-500/40');
-        fbBox.innerHTML = `❌ <strong>Respuesta incorrecta.</strong> <br/><span class="text-xs font-normal mt-1 block">${feedback || `La respuesta correcta era: "${correct}".`}</span>`;
-      }
-    }
-
-    function nextExercise(totalInDay) {
-      window.speechSynthesis.cancel();
-      if (currentIndex < totalInDay - 1) {
-        currentIndex++;
-        renderExerciseScreen();
-      } else {
-        if (currentDay < 3) {
-          if (currentModule === unlockedModule && currentDay === unlockedDay) {
-            unlockedDay++;
-            localStorage.setItem('a2_unlocked_day', unlockedDay);
-          }
-        } else {
-          if (currentModule === unlockedModule) {
-            unlockedModule++;
-            unlockedDay = 1;
-            localStorage.setItem('a2_unlocked_module', unlockedModule);
-            localStorage.setItem('a2_unlocked_day', unlockedDay);
-          }
-        }
-        renderDaySelection();
-      }
-    }
-
-    function prevExercise() {
-      window.speechSynthesis.cancel();
-      if (currentIndex > 0) {
-        currentIndex--;
-        renderExerciseScreen();
-      }
-    }
-
-    loadExercises();
-  </script>
-
+  updateUI();
+}
+</script>
 </body>
 </html>
